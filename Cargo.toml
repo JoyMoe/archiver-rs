@@ -1,0 +1,26 @@
+[package]
+name = "archiver-rs"
+version = "0.1.0"
+authors = ["Chino Chang <chino@joymoe.com>"]
+edition = "2018"
+description = "A library for easy interaction with multiple archive formats"
+documentation = "https://docs.rs/archiver"
+homepage = "https://github.com/JoyMoe/archiver-rs"
+keywords = ["tar", "zip", "xz", "gz", "gzip", "lzma"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/JoyMoe/archiver-rs"
+
+[dependencies]
+bzip2 = { version = "0.3", optional = true }
+flate2 = { version = "1.0", optional = true }
+lzma-rs = { version = "0.1", optional = true }
+tar = { version = "0.4", optional = true }
+zip = { version = "0.5", optional = true }
+
+[features]
+default = ["all"]
+all = ["bzip2", "gzip", "tar", "xz", "zip"]
+gzip = ["flate2", "tar"]
+xz = ["lzma-rs", "tar"]
+sevenzip = ["lzma-rs"]
