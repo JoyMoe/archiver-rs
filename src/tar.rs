@@ -82,4 +82,19 @@ mod tar {
 
         Err("NOT FOUND")?
     }
+
+    pub fn files<P: AsRef<Path>>(archive: P) -> Result<Vec<String>, Error> {
+        let archive = archive.as_ref();
+
+        let archive = File::open(&archive)?;
+        let mut archive = Archive::new(archive);
+
+        let files = archive
+            .entries()?
+            .into_iter()
+            .map(|e| e.unwrap().path().unwrap().to_str().unwrap().into())
+            .collect();
+
+        Ok(files)
+    }
 }

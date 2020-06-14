@@ -92,4 +92,15 @@ mod zip {
 
         return Ok(());
     }
+
+    pub fn files<P: AsRef<Path>>(archive: P) -> Result<Vec<String>, Error> {
+        let archive = archive.as_ref();
+
+        let archive = File::open(&archive)?;
+        let archive = ZipArchive::new(archive)?;
+
+        let files = archive.file_names().map(|e| e.into()).collect();
+
+        Ok(files)
+    }
 }
