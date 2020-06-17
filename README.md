@@ -10,18 +10,14 @@ A library for easy interaction with multiple archive formats
 ## Usage
 
 ```rust
-archiver_rs::bzip2::decode("foo.tar.bz2", "foo.tar");
-archiver_rs::gzip::decode("foo.tar.gz", "foo.tar");
+let mut bz = archiver_rs::Bzip2::open("foo.tar.bz2");
+bz.decompress("foo.tar");
 
-archiver_rs::tar::files("foo.tar");
-archiver_rs::tar::contains("foo.tar", "bar.txt");
-archiver_rs::tar::extract("foo.tar", "./foo/");
-archiver_rs::tar::extract_single("foo.tar", "./foo/", "bar.txt");
-
-archiver_rs::zip::files("foo.zip");
-archiver_rs::zip::contains("foo.zip", "bar.txt");
-archiver_rs::zip::extract("foo.zip", "./foo/");
-archiver_rs::zip::extract_single("foo.zip", "./foo/", "bar.txt");
+let mut tar = archiver_rs::Tar::open("foo.tar");
+tar.files();
+tar.contains("bar.txt");
+tar.extract("./foo/");
+tar.extract_single("./foo/bar.txt", "bar.txt");
 ```
 
 ## License

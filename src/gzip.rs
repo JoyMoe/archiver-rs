@@ -1,4 +1,7 @@
 #[cfg(feature = "gzip")]
+pub use self::gzip::Gzip;
+
+#[cfg(feature = "gzip")]
 mod gzip {
     use std::fs::{create_dir_all, File};
     use std::io::copy;
@@ -6,24 +9,35 @@ mod gzip {
 
     use flate2::read::GzDecoder;
 
-    use crate::Error;
+    use crate::{Compressed, Error};
 
-    pub fn decode<P: AsRef<Path>, T: AsRef<Path>>(archive: P, target: T) -> Result<(), Error> {
-        let archive = archive.as_ref();
-        let target = target.as_ref();
+    pub struct Gzip {
+        archive: GzDecoder<File>,
+    }
 
-        if let Some(p) = target.parent() {
-            if !p.exists() {
-                create_dir_all(&p)?;
-            }
+    impl Gzip {
+        pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
+            let archive = File::open(&path)?;
+            let archive = GzDecoder::new(archive);
+
+            Ok(Self { archive })
         }
+    }
 
-        let archive = File::open(&archive)?;
-        let mut archive = GzDecoder::new(archive);
+    impl Compressed for Gzip {
+        fn decompress<T: AsRef<Path>>(&mut self, target: T) -> Result<(), Error> {
+            let target = target.as_ref();
 
-        let mut output = File::create(&target)?;
-        copy(&mut archive, &mut output)?;
+            if let Some(p) = target.parent() {
+                if !p.exists() {
+                    create_dir_all(&p)?;
+                }
+            }
 
-        Ok(())
+            let mut output = File::create(&target)?;
+            copy(&mut self.archive, &mut output)?;
+
+            Ok(())
+        }
     }
 }

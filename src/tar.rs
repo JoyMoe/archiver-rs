@@ -1,100 +1,93 @@
 #[cfg(feature = "tar")]
+pub use self::tar::Tar;
+
+#[cfg(feature = "tar")]
 mod tar {
     use std::fs::{create_dir_all, File};
     use std::io::copy;
     use std::path::Path;
 
-    use tar::Archive;
+    use crate::{Archive, Error};
 
-    use crate::Error;
+    pub struct Tar {
+        archive: tar::Archive<File>,
+    }
 
-    fn contains_file(archive: &mut Archive<File>, file: String) -> Result<bool, Error> {
-        for f in archive.entries()? {
-            let f = f?;
-            let name = f.path()?;
+    impl Tar {
+        pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
+            let archive = File::open(&path)?;
+            let archive = tar::Archive::new(archive);
 
-            if name.to_str().ok_or_else(|| "NO NAME")? == file {
-                return Ok(true);
+            Ok(Self { archive })
+        }
+    }
+
+    impl Archive for Tar {
+        fn contains<S: Into<String>>(&mut self, file: S) -> Result<bool, Error> {
+            let file = file.into();
+
+            for f in self.archive.entries()? {
+                let f = f?;
+                let name = f.path()?;
+
+                if name.to_str().ok_or_else(|| "NO NAME")? == file {
+                    return Ok(true);
+                }
             }
+
+            Ok(false)
         }
 
-        Ok(false)
-    }
+        fn extract<T: AsRef<Path>>(&mut self, destination: T) -> Result<(), Error> {
+            let destination = destination.as_ref();
 
-    pub fn contains<P: AsRef<Path>, S: Into<String>>(archive: P, file: S) -> Result<bool, Error> {
-        let archive = archive.as_ref();
-        let file = file.into();
-
-        let archive = File::open(&archive)?;
-        let mut archive = Archive::new(archive);
-
-        contains_file(&mut archive, file)
-    }
-
-    pub fn extract<P: AsRef<Path>, T: AsRef<Path>>(
-        archive: P,
-        destination: T,
-    ) -> Result<(), Error> {
-        let archive = archive.as_ref();
-        let destination = destination.as_ref();
-
-        if !destination.exists() {
-            create_dir_all(&destination)?;
-        }
-
-        let archive = File::open(&archive)?;
-        let mut archive = Archive::new(archive);
-
-        archive.unpack(destination)?;
-
-        Ok(())
-    }
-
-    pub fn extract_single<P: AsRef<Path>, T: AsRef<Path>, S: Into<String>>(
-        archive: P,
-        destination: T,
-        file: S,
-    ) -> Result<(), Error> {
-        let archive = archive.as_ref();
-        let destination = destination.as_ref();
-        let file = file.into();
-
-        if !destination.exists() {
-            create_dir_all(&destination)?;
-        }
-
-        let target = destination.join(&file);
-
-        let archive = File::open(&archive)?;
-        let mut archive = Archive::new(archive);
-
-        for f in archive.entries()? {
-            let mut f = f?;
-            let name = f.path()?;
-
-            if name.to_str().ok_or_else(|| "NO NAME")? == &file {
-                let mut target = File::create(&target)?;
-                copy(&mut f, &mut target)?;
-
-                return Ok(());
+            if !destination.exists() {
+                create_dir_all(&destination)?;
             }
+
+            self.archive.unpack(destination)?;
+
+            Ok(())
         }
 
-        Err("NOT FOUND")?
-    }
+        fn extract_single<T: AsRef<Path>, S: Into<String>>(
+            &mut self,
+            target: T,
+            file: S,
+        ) -> Result<(), Error> {
+            let target = target.as_ref();
+            let file = file.into();
 
-    pub fn files<P: AsRef<Path>>(archive: P) -> Result<Vec<String>, Error> {
-        let archive = archive.as_ref();
+            if let Some(p) = target.parent() {
+                if !p.exists() {
+                    create_dir_all(&p)?;
+                }
+            }
 
-        let archive = File::open(&archive)?;
-        let mut archive = Archive::new(archive);
+            for f in self.archive.entries()? {
+                let mut f = f?;
+                let name = f.path()?;
 
-        let files = archive
-            .entries()?
-            .into_iter()
-            .map(|e| e.unwrap().path().unwrap().to_str().unwrap().into())
-            .collect();
+                if name.to_str().ok_or_else(|| "NO NAME")? == &file {
+                    let mut target = File::create(&target)?;
+                    copy(&mut f, &mut target)?;
 
-        Ok(files)
+                    return Ok(());
+                }
+            }
+
+            Err("NOT FOUND")?
+        }
+
+        fn files(&mut self) -> Result<Vec<String>, Error> {
+            let files = self
+                .archive
+                .entries()?
+                .into_iter()
+                .map(|e| e.unwrap().path().unwrap().to_str().unwrap().into())
+                .collect();
+
+            Ok(files)
+        }
     }
 }

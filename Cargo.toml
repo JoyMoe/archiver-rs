@@ -1,6 +1,6 @@
 [package]
 name = "archiver-rs"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Chino Chang <chino@joymoe.com>"]
 edition = "2018"
 description = "A library for easy interaction with multiple archive formats"
@@ -21,6 +21,5 @@ zip = { version = "0.5", optional = true }
 [features]
 default = ["all"]
 all = ["bzip2", "gzip", "tar", "xz", "zip"]
-gzip = ["flate2", "tar"]
-xz = ["lzma-rs", "tar"]
-sevenzip = ["lzma-rs"]
+gzip = ["flate2"]
+xz = ["lzma-rs"]
