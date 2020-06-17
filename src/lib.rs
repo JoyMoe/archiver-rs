@@ -15,19 +15,15 @@ mod zip;
 type Error = Box<dyn std::error::Error>;
 
 trait Archive {
-    fn contains<S: Into<String>>(&mut self, file: S) -> Result<bool, Error>;
+    fn contains(&mut self, file: String) -> Result<bool, Error>;
 
-    fn extract<T: AsRef<Path>>(&mut self, destination: T) -> Result<(), Error>;
+    fn extract(&mut self, destination: &Path) -> Result<(), Error>;
 
-    fn extract_single<T: AsRef<Path>, S: Into<String>>(
-        &mut self,
-        target: T,
-        file: S,
-    ) -> Result<(), Error>;
+    fn extract_single(&mut self, target: &Path, file: String) -> Result<(), Error>;
 
     fn files(&mut self) -> Result<Vec<String>, Error>;
 }
 
 trait Compressed {
-    fn decompress<T: AsRef<Path>>(&mut self, target: T) -> Result<(), Error>;
+    fn decompress(&mut self, target: &Path) -> Result<(), Error>;
 }

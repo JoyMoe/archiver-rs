@@ -17,8 +17,8 @@ mod xz {
     }
 
     impl Xz<File> {
-        pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
-            let archive = File::open(&path)?;
+        pub fn open(path: &Path) -> std::io::Result<Self> {
+            let archive = File::open(path)?;
 
             Self::new(archive)
         }
@@ -33,16 +33,14 @@ mod xz {
     }
 
     impl<R: Read> Compressed for Xz<R> {
-        fn decompress<T: AsRef<Path>>(&mut self, target: T) -> Result<(), Error> {
-            let target = target.as_ref();
-
+        fn decompress(&mut self, target: &Path) -> Result<(), Error> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;
                 }
             }
 
-            let mut output = File::create(&target)?;
+            let mut output = File::create(target)?;
             match xz_decompress(&mut self.archive, &mut output) {
                 Ok(_) => Ok(()),
                 Err(err) => match err {

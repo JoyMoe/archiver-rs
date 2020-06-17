@@ -16,8 +16,8 @@ mod zip {
     }
 
     impl Zip<File> {
-        pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
-            let archive = File::open(&path)?;
+        pub fn open(path: &Path) -> std::io::Result<Self> {
+            let archive = File::open(path)?;
 
             Self::new(archive)
         }
@@ -32,9 +32,7 @@ mod zip {
     }
 
     impl<R: Read + Seek> Archive for Zip<R> {
-        fn contains<S: Into<String>>(&mut self, file: S) -> Result<bool, Error> {
-            let file = file.into();
-
+        fn contains(&mut self, file: String) -> Result<bool, Error> {
             let result = match self.archive.by_name(&file) {
                 Ok(_) => true,
                 Err(_) => false,
@@ -43,23 +41,21 @@ mod zip {
             Ok(result)
         }
 
-        fn extract<T: AsRef<Path>>(&mut self, destination: T) -> Result<(), Error> {
-            let destination = destination.as_ref();
-
+        fn extract(&mut self, destination: &Path) -> Result<(), Error> {
             for i in 0..self.archive.len() {
                 let mut file = self.archive.by_index(i)?;
                 let target = file.sanitized_name();
                 let target = destination.join(target);
 
                 if (&*file.name()).ends_with('/') {
-                    create_dir_all(&target)?;
+                    create_dir_all(target)?;
                 } else {
                     if let Some(p) = target.parent() {
                         if !p.exists() {
                             create_dir_all(&p)?;
                         }
                     }
-                    let mut outfile = File::create(&target)?;
+                    let mut outfile = File::create(target)?;
                     copy(&mut file, &mut outfile)?;
                 }
 
@@ -70,7 +66,7 @@ mod zip {
                     use std::os::unix::fs::PermissionsExt;
 
                     if let Some(mode) = file.unix_mode() {
-                        set_permissions(&target, Permissions::from_mode(mode))?;
+                        set_permissions(target, Permissions::from_mode(mode))?;
                     }
                 }
             }
@@ -78,14 +74,7 @@ mod zip {
             Ok(())
         }
 
-        fn extract_single<T: AsRef<Path>, S: Into<String>>(
-            &mut self,
-            target: T,
-            file: S,
-        ) -> Result<(), Error> {
-            let target = target.as_ref();
-            let file = file.into();
-
+        fn extract_single(&mut self, target: &Path, file: String) -> Result<(), Error> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;
@@ -94,7 +83,7 @@ mod zip {
 
             let mut f = self.archive.by_name(&file).map_err(|_| "NOT FOUND")?;
 
-            let mut target = File::create(&target)?;
+            let mut target = File::create(target)?;
             copy(&mut f, &mut target)?;
 
             return Ok(());

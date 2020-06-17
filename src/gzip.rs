@@ -16,8 +16,8 @@ mod gzip {
     }
 
     impl Gzip<File> {
-        pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
-            let archive = File::open(&path)?;
+        pub fn open(path: &Path) -> std::io::Result<Self> {
+            let archive = File::open(path)?;
 
             Self::new(archive)
         }
@@ -32,16 +32,14 @@ mod gzip {
     }
 
     impl<R: Read> Compressed for Gzip<R> {
-        fn decompress<T: AsRef<Path>>(&mut self, target: T) -> Result<(), Error> {
-            let target = target.as_ref();
-
+        fn decompress(&mut self, target: &Path) -> Result<(), Error> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;
                 }
             }
 
-            let mut output = File::create(&target)?;
+            let mut output = File::create(target)?;
             copy(&mut self.archive, &mut output)?;
 
             Ok(())

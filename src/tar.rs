@@ -14,8 +14,8 @@ mod tar {
     }
 
     impl Tar<File> {
-        pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
-            let archive = File::open(&path)?;
+        pub fn open(path: &Path) -> std::io::Result<Self> {
+            let archive = File::open(path)?;
 
             Self::new(archive)
         }
@@ -30,9 +30,7 @@ mod tar {
     }
 
     impl<R: Read> Archive for Tar<R> {
-        fn contains<S: Into<String>>(&mut self, file: S) -> Result<bool, Error> {
-            let file = file.into();
-
+        fn contains(&mut self, file: String) -> Result<bool, Error> {
             for f in self.archive.entries()? {
                 let f = f?;
                 let name = f.path()?;
@@ -45,11 +43,9 @@ mod tar {
             Ok(false)
         }
 
-        fn extract<T: AsRef<Path>>(&mut self, destination: T) -> Result<(), Error> {
-            let destination = destination.as_ref();
-
+        fn extract(&mut self, destination: &Path) -> Result<(), Error> {
             if !destination.exists() {
-                create_dir_all(&destination)?;
+                create_dir_all(destination)?;
             }
 
             self.archive.unpack(destination)?;
@@ -57,14 +53,7 @@ mod tar {
             Ok(())
         }
 
-        fn extract_single<T: AsRef<Path>, S: Into<String>>(
-            &mut self,
-            target: T,
-            file: S,
-        ) -> Result<(), Error> {
-            let target = target.as_ref();
-            let file = file.into();
-
+        fn extract_single(&mut self, target: &Path, file: String) -> Result<(), Error> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;
@@ -76,7 +65,7 @@ mod tar {
                 let name = f.path()?;
 
                 if name.to_str().ok_or_else(|| "NO NAME")? == &file {
-                    let mut target = File::create(&target)?;
+                    let mut target = File::create(target)?;
                     copy(&mut f, &mut target)?;
 
                     return Ok(());
