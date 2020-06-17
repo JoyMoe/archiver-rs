@@ -51,4 +51,10 @@ mod xz {
             }
         }
     }
+
+    impl<R: Read> Read for Xz<R> {
+        fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+            todo!()
+        }
+    }
 }

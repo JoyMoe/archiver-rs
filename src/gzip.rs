@@ -45,4 +45,10 @@ mod gzip {
             Ok(())
         }
     }
+
+    impl<R: Read> Read for Gzip<R> {
+        fn read(&mut self, into: &mut [u8]) -> std::io::Result<usize> {
+            self.archive.read(into)
+        }
+    }
 }

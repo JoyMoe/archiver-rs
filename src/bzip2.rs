@@ -45,4 +45,10 @@ mod bzip2 {
             Ok(())
         }
     }
+
+    impl<R: Read> Read for Bzip2<R> {
+        fn read(&mut self, into: &mut [u8]) -> std::io::Result<usize> {
+            self.archive.read(into)
+        }
+    }
 }
