@@ -1,15 +1,33 @@
 use std::path::Path;
 
+#[cfg(feature = "bzip")]
 pub use crate::bzip2::Bzip2;
+
+#[cfg(feature = "gzip")]
 pub use crate::gzip::Gzip;
+
+#[cfg(feature = "tar")]
 pub use crate::tar::Tar;
+
+#[cfg(feature = "xz")]
 pub use crate::xz::Xz;
+
+#[cfg(feature = "zip")]
 pub use crate::zip::Zip;
 
+#[cfg(feature = "bzip")]
 mod bzip2;
+
+#[cfg(feature = "gzip")]
 mod gzip;
+
+#[cfg(feature = "tar")]
 mod tar;
+
+#[cfg(feature = "xz")]
 mod xz;
+
+#[cfg(feature = "zip")]
 mod zip;
 
 type Error = Box<dyn std::error::Error>;
