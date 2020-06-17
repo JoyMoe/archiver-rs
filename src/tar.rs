@@ -4,25 +4,32 @@ pub use self::tar::Tar;
 #[cfg(feature = "tar")]
 mod tar {
     use std::fs::{create_dir_all, File};
-    use std::io::copy;
+    use std::io::{copy, Read};
     use std::path::Path;
 
     use crate::{Archive, Error};
 
-    pub struct Tar {
-        archive: tar::Archive<File>,
+    pub struct Tar<R: Read> {
+        archive: tar::Archive<R>,
     }
 
-    impl Tar {
+    impl Tar<File> {
         pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
             let archive = File::open(&path)?;
-            let archive = tar::Archive::new(archive);
+
+            Self::new(archive)
+        }
+    }
+
+    impl<R: Read> Tar<R> {
+        pub fn new(r: R) -> std::io::Result<Self> {
+            let archive = tar::Archive::new(r);
 
             Ok(Self { archive })
         }
     }
 
-    impl Archive for Tar {
+    impl<R: Read> Archive for Tar<R> {
         fn contains<S: Into<String>>(&mut self, file: S) -> Result<bool, Error> {
             let file = file.into();
 

@@ -4,7 +4,7 @@ pub use self::xz::Xz;
 #[cfg(feature = "xz")]
 mod xz {
     use std::fs::{create_dir_all, File};
-    use std::io::BufReader;
+    use std::io::{BufReader, Read};
     use std::path::Path;
 
     use lzma_rs::error;
@@ -12,20 +12,27 @@ mod xz {
 
     use crate::{Compressed, Error};
 
-    pub struct Xz {
-        archive: BufReader<File>,
+    pub struct Xz<R: Read> {
+        archive: BufReader<R>,
     }
 
-    impl Xz {
+    impl Xz<File> {
         pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
             let archive = File::open(&path)?;
-            let archive = BufReader::new(archive);
+
+            Self::new(archive)
+        }
+    }
+
+    impl<R: Read> Xz<R> {
+        pub fn new(r: R) -> std::io::Result<Self> {
+            let archive = BufReader::new(r);
 
             Ok(Self { archive })
         }
     }
 
-    impl Compressed for Xz {
+    impl<R: Read> Compressed for Xz<R> {
         fn decompress<T: AsRef<Path>>(&mut self, target: T) -> Result<(), Error> {
             let target = target.as_ref();
 

@@ -4,27 +4,34 @@ pub use self::zip::Zip;
 #[cfg(feature = "zip")]
 mod zip {
     use std::fs::{create_dir_all, File};
-    use std::io::copy;
+    use std::io::{copy, Read, Seek};
     use std::path::Path;
 
     use zip::ZipArchive;
 
     use crate::{Archive, Error};
 
-    pub struct Zip {
-        archive: ZipArchive<File>,
+    pub struct Zip<R: Read + Seek> {
+        archive: ZipArchive<R>,
     }
 
-    impl Zip {
+    impl Zip<File> {
         pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
             let archive = File::open(&path)?;
-            let archive = ZipArchive::new(archive)?;
+
+            Self::new(archive)
+        }
+    }
+
+    impl<R: Read + Seek> Zip<R> {
+        pub fn new(r: R) -> std::io::Result<Self> {
+            let archive = ZipArchive::new(r)?;
 
             Ok(Self { archive })
         }
     }
 
-    impl Archive for Zip {
+    impl<R: Read + Seek> Archive for Zip<R> {
         fn contains<S: Into<String>>(&mut self, file: S) -> Result<bool, Error> {
             let file = file.into();
 

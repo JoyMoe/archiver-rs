@@ -4,27 +4,34 @@ pub use self::gzip::Gzip;
 #[cfg(feature = "gzip")]
 mod gzip {
     use std::fs::{create_dir_all, File};
-    use std::io::copy;
+    use std::io::{copy, Read};
     use std::path::Path;
 
     use flate2::read::GzDecoder;
 
     use crate::{Compressed, Error};
 
-    pub struct Gzip {
-        archive: GzDecoder<File>,
+    pub struct Gzip<R: Read> {
+        archive: GzDecoder<R>,
     }
 
-    impl Gzip {
+    impl Gzip<File> {
         pub fn open<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
             let archive = File::open(&path)?;
-            let archive = GzDecoder::new(archive);
+
+            Self::new(archive)
+        }
+    }
+
+    impl<R: Read> Gzip<R> {
+        pub fn new(r: R) -> std::io::Result<Self> {
+            let archive = GzDecoder::new(r);
 
             Ok(Self { archive })
         }
     }
 
-    impl Compressed for Gzip {
+    impl<R: Read> Compressed for Gzip<R> {
         fn decompress<T: AsRef<Path>>(&mut self, target: T) -> Result<(), Error> {
             let target = target.as_ref();
 
