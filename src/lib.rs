@@ -22,6 +22,8 @@ pub trait Archive {
     fn extract_single(&mut self, target: &Path, file: String) -> Result<(), Error>;
 
     fn files(&mut self) -> Result<Vec<String>, Error>;
+
+    fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<(), Error>;
 }
 
 pub trait Compressed: std::io::Read {

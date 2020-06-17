@@ -34,8 +34,9 @@ mod tar {
             for f in self.archive.entries()? {
                 let f = f?;
                 let name = f.path()?;
+                let name = name.to_str().ok_or_else(|| "NO NAME")?;
 
-                if name.to_str().ok_or_else(|| "NO NAME")? == file {
+                if name == file {
                     return Ok(true);
                 }
             }
@@ -84,6 +85,18 @@ mod tar {
                 .collect();
 
             Ok(files)
+        }
+
+        fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<(), Error> {
+            let files = self.files()?;
+
+            for file in files {
+                if let Some(f) = f(file.clone()) {
+                    self.extract_single(Path::new(&f), file.clone())?;
+                }
+            }
+
+            Ok(())
         }
     }
 }
