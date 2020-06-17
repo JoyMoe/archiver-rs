@@ -1,7 +1,7 @@
-#[cfg(feature = "bzip2")]
+#[cfg(feature = "bzip")]
 pub use self::bzip2::Bzip2;
 
-#[cfg(feature = "bzip2")]
+#[cfg(feature = "bzip")]
 mod bzip2 {
     use std::fs::{create_dir_all, File};
     use std::io::{copy, Read};

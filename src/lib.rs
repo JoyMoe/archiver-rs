@@ -40,7 +40,7 @@ pub fn open(path: &Path) -> std::io::Result<Box<dyn Archive>> {
     file.seek(SeekFrom::Start(0))?;
 
     match buffer {
-        #[cfg(all(feature = "bzip2", feature = "tar"))]
+        #[cfg(all(feature = "bzip", feature = "tar"))]
         [0x42, 0x5A] => Ok(Box::new(Tar::new(Bzip2::new(file)?)?)), // .tar.gz
         #[cfg(all(feature = "gzip", feature = "tar"))]
         [0x1F, 0x8B] => Ok(Box::new(Tar::new(Gzip::new(file)?)?)), // .tar.gz
