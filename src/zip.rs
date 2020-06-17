@@ -58,17 +58,6 @@ mod zip {
                     let mut outfile = File::create(target)?;
                     copy(&mut file, &mut outfile)?;
                 }
-
-                // Get and Set permissions
-                #[cfg(unix)]
-                {
-                    use std::fs::{set_permissions, Permissions};
-                    use std::os::unix::fs::PermissionsExt;
-
-                    if let Some(mode) = file.unix_mode() {
-                        set_permissions(target, Permissions::from_mode(mode))?;
-                    }
-                }
             }
 
             Ok(())
