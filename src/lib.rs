@@ -30,7 +30,7 @@ mod xz;
 #[cfg(feature = "zip")]
 mod zip;
 
-type Error = Box<dyn std::error::Error>;
+type Error = Box<dyn std::error::Error + Send + Sync>;
 
 pub trait Archive {
     fn contains(&mut self, file: String) -> Result<bool, Error>;
