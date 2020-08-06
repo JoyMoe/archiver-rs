@@ -62,6 +62,8 @@ pub fn open(path: &Path) -> std::io::Result<Box<dyn Archive>> {
         [0x42, 0x5A] => Ok(Box::new(Tar::new(Bzip2::new(file)?)?)), // .tar.gz
         #[cfg(all(feature = "gzip", feature = "tar"))]
         [0x1F, 0x8B] => Ok(Box::new(Tar::new(Gzip::new(file)?)?)), // .tar.gz
+        #[cfg(all(feature = "xz", feature = "tar"))]
+        [0xFD, 0x37] => Ok(Box::new(Tar::new(Xz::new(file)?)?)), // .tar.xz
         #[cfg(feature = "zip")]
         [0x50, 0x4B] => Ok(Box::new(Zip::new(file)?)), // .zip
         _ => Err(Error::from(ErrorKind::InvalidData))?,
