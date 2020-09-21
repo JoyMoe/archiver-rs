@@ -4,16 +4,15 @@ pub use self::xz::Xz;
 #[cfg(feature = "xz")]
 mod xz {
     use std::fs::{create_dir_all, File};
-    use std::io::{BufReader, Read};
+    use std::io::{copy, Read};
     use std::path::Path;
 
-    use lzma_rs::error;
-    use lzma_rs::xz_decompress;
+    use xz2::read::XzDecoder;
 
     use crate::{Compressed, Error};
 
     pub struct Xz<R: Read> {
-        archive: BufReader<R>,
+        archive: XzDecoder<R>,
     }
 
     impl Xz<File> {
@@ -26,7 +25,7 @@ mod xz {
 
     impl<R: Read> Xz<R> {
         pub fn new(r: R) -> std::io::Result<Self> {
-            let archive = BufReader::new(r);
+            let archive = XzDecoder::new(r);
 
             Ok(Self { archive })
         }
@@ -41,20 +40,15 @@ mod xz {
             }
 
             let mut output = File::create(target)?;
-            match xz_decompress(&mut self.archive, &mut output) {
-                Ok(_) => Ok(()),
-                Err(err) => match err {
-                    error::Error::IOError(err) => Err(err)?,
-                    error::Error::LZMAError(err) => Err(err)?,
-                    error::Error::XZError(err) => Err(err)?,
-                },
-            }
+            copy(&mut self.archive, &mut output)?;
+
+            Ok(())
         }
     }
 
     impl<R: Read> Read for Xz<R> {
-        fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
-            todo!()
+        fn read(&mut self, into: &mut [u8]) -> std::io::Result<usize> {
+            self.archive.read(into)
         }
     }
 }
