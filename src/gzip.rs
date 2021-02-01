@@ -9,7 +9,7 @@ mod gzip {
 
     use flate2::read::GzDecoder;
 
-    use crate::{Compressed, Error};
+    use crate::{Compressed, Result};
 
     pub struct Gzip<R: Read> {
         archive: GzDecoder<R>,
@@ -32,7 +32,7 @@ mod gzip {
     }
 
     impl<R: Read> Compressed for Gzip<R> {
-        fn decompress(&mut self, target: &Path) -> Result<(), Error> {
+        fn decompress(&mut self, target: &Path) -> Result<()> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;

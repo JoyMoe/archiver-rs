@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use thiserror::Error;
+
 #[cfg(feature = "bzip")]
 pub use crate::bzip2::Bzip2;
 
@@ -30,22 +32,30 @@ mod xz;
 #[cfg(feature = "zip")]
 mod zip;
 
-type Error = Box<dyn std::error::Error + Send + Sync>;
+#[derive(Error, Debug)]
+pub enum ArchiverError {
+    #[error("{0}")]
+    Io(#[from] std::io::Error),
+    #[error("File Not Found")]
+    NotFound,
+}
+
+type Result<T> = std::result::Result<T, ArchiverError>;
 
 pub trait Archive {
-    fn contains(&mut self, file: String) -> Result<bool, Error>;
+    fn contains(&mut self, file: String) -> Result<bool>;
 
-    fn extract(&mut self, destination: &Path) -> Result<(), Error>;
+    fn extract(&mut self, destination: &Path) -> Result<()>;
 
-    fn extract_single(&mut self, target: &Path, file: String) -> Result<(), Error>;
+    fn extract_single(&mut self, target: &Path, file: String) -> Result<()>;
 
-    fn files(&mut self) -> Result<Vec<String>, Error>;
+    fn files(&mut self) -> Result<Vec<String>>;
 
-    fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<(), Error>;
+    fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<()>;
 }
 
 pub trait Compressed: std::io::Read {
-    fn decompress(&mut self, target: &Path) -> Result<(), Error>;
+    fn decompress(&mut self, target: &Path) -> Result<()>;
 }
 
 pub fn open(path: &Path) -> std::io::Result<Box<dyn Archive>> {

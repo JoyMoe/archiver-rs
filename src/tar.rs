@@ -7,7 +7,7 @@ mod tar {
     use std::io::{copy, Read};
     use std::path::Path;
 
-    use crate::{Archive, Error};
+    use crate::{Archive, ArchiverError, Result};
 
     pub struct Tar<R: Read> {
         archive: tar::Archive<R>,
@@ -30,11 +30,11 @@ mod tar {
     }
 
     impl<R: Read> Archive for Tar<R> {
-        fn contains(&mut self, file: String) -> Result<bool, Error> {
+        fn contains(&mut self, file: String) -> Result<bool> {
             for f in self.archive.entries()? {
                 let f = f?;
                 let name = f.path()?;
-                let name = name.to_str().ok_or_else(|| "NO NAME")?;
+                let name = name.to_str().unwrap_or_else(|| "");
 
                 if name == file {
                     return Ok(true);
@@ -44,7 +44,7 @@ mod tar {
             Ok(false)
         }
 
-        fn extract(&mut self, destination: &Path) -> Result<(), Error> {
+        fn extract(&mut self, destination: &Path) -> Result<()> {
             if !destination.exists() {
                 create_dir_all(destination)?;
             }
@@ -54,7 +54,7 @@ mod tar {
             Ok(())
         }
 
-        fn extract_single(&mut self, target: &Path, file: String) -> Result<(), Error> {
+        fn extract_single(&mut self, target: &Path, file: String) -> Result<()> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;
@@ -65,7 +65,7 @@ mod tar {
                 let mut f = f?;
                 let name = f.path()?;
 
-                if name.to_str().ok_or_else(|| "NO NAME")? == &file {
+                if name.to_str().unwrap_or_else(|| "") == &file {
                     let mut target = File::create(target)?;
                     copy(&mut f, &mut target)?;
 
@@ -73,10 +73,10 @@ mod tar {
                 }
             }
 
-            Err("NOT FOUND")?
+            Err(ArchiverError::NotFound)?
         }
 
-        fn files(&mut self) -> Result<Vec<String>, Error> {
+        fn files(&mut self) -> Result<Vec<String>> {
             let files = self
                 .archive
                 .entries()?
@@ -87,7 +87,7 @@ mod tar {
             Ok(files)
         }
 
-        fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<(), Error> {
+        fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<()> {
             let files = self.files()?;
 
             for file in files {

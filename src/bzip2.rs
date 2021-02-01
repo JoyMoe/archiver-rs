@@ -9,7 +9,7 @@ mod bzip2 {
 
     use bzip2::read::BzDecoder;
 
-    use crate::{Compressed, Error};
+    use crate::{Compressed, Result};
 
     pub struct Bzip2<R: Read> {
         archive: BzDecoder<R>,
@@ -32,7 +32,7 @@ mod bzip2 {
     }
 
     impl<R: Read> Compressed for Bzip2<R> {
-        fn decompress(&mut self, target: &Path) -> Result<(), Error> {
+        fn decompress(&mut self, target: &Path) -> Result<()> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;

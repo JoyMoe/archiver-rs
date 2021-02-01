@@ -9,7 +9,7 @@ mod zip {
 
     use zip::ZipArchive;
 
-    use crate::{Archive, Error};
+    use crate::{Archive, ArchiverError, Result};
 
     pub struct Zip<R: Read + Seek> {
         archive: ZipArchive<R>,
@@ -32,7 +32,7 @@ mod zip {
     }
 
     impl<R: Read + Seek> Archive for Zip<R> {
-        fn contains(&mut self, file: String) -> Result<bool, Error> {
+        fn contains(&mut self, file: String) -> Result<bool> {
             let result = match self.archive.by_name(&file) {
                 Ok(_) => true,
                 Err(_) => false,
@@ -41,10 +41,10 @@ mod zip {
             Ok(result)
         }
 
-        fn extract(&mut self, destination: &Path) -> Result<(), Error> {
+        fn extract(&mut self, destination: &Path) -> Result<()> {
             for i in 0..self.archive.len() {
-                let mut file = self.archive.by_index(i)?;
-                let target = file.sanitized_name();
+                let mut file = self.archive.by_index(i).unwrap();
+                let target = file.mangled_name();
                 let target = destination.join(target);
 
                 if (&*file.name()).ends_with('/') {
@@ -63,14 +63,17 @@ mod zip {
             Ok(())
         }
 
-        fn extract_single(&mut self, target: &Path, file: String) -> Result<(), Error> {
+        fn extract_single(&mut self, target: &Path, file: String) -> Result<()> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;
                 }
             }
 
-            let mut f = self.archive.by_name(&file).map_err(|_| "NOT FOUND")?;
+            let mut f = self
+                .archive
+                .by_name(&file)
+                .map_err(|_| ArchiverError::NotFound)?;
 
             let mut target = File::create(target)?;
             copy(&mut f, &mut target)?;
@@ -78,13 +81,13 @@ mod zip {
             return Ok(());
         }
 
-        fn files(&mut self) -> Result<Vec<String>, Error> {
+        fn files(&mut self) -> Result<Vec<String>> {
             let files = self.archive.file_names().map(|e| e.into()).collect();
 
             Ok(files)
         }
 
-        fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<(), Error> {
+        fn walk(&mut self, f: Box<dyn Fn(String) -> Option<String>>) -> Result<()> {
             let files = self.files()?;
 
             for file in files {

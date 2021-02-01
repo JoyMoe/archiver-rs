@@ -9,7 +9,7 @@ mod xz {
 
     use xz2::read::XzDecoder;
 
-    use crate::{Compressed, Error};
+    use crate::{Compressed, Result};
 
     pub struct Xz<R: Read> {
         archive: XzDecoder<R>,
@@ -32,7 +32,7 @@ mod xz {
     }
 
     impl<R: Read> Compressed for Xz<R> {
-        fn decompress(&mut self, target: &Path) -> Result<(), Error> {
+        fn decompress(&mut self, target: &Path) -> Result<()> {
             if let Some(p) = target.parent() {
                 if !p.exists() {
                     create_dir_all(&p)?;
