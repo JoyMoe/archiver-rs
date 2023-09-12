@@ -1,54 +1,32 @@
-#[cfg(feature = "bzip")]
-pub use self::bzip2::Bzip2;
+use bzip2::read::BzDecoder;
+use std::{fs::File, io::Read, path::Path};
 
-#[cfg(feature = "bzip")]
-mod bzip2 {
-    use std::fs::{create_dir_all, File};
-    use std::io::{copy, Read};
-    use std::path::Path;
+use crate::Compressed;
 
-    use bzip2::read::BzDecoder;
+pub struct Bzip2<R: Read> {
+    archive: BzDecoder<R>,
+}
 
-    use crate::{Compressed, Result};
+impl Bzip2<File> {
+    pub fn open(path: impl AsRef<Path>) -> std::io::Result<Self> {
+        let archive = File::open(path)?;
 
-    pub struct Bzip2<R: Read> {
-        archive: BzDecoder<R>,
+        Self::new(archive)
     }
+}
 
-    impl Bzip2<File> {
-        pub fn open(path: &Path) -> std::io::Result<Self> {
-            let archive = File::open(path)?;
+impl<R: Read> Bzip2<R> {
+    pub fn new(r: R) -> std::io::Result<Self> {
+        let archive = BzDecoder::new(r);
 
-            Self::new(archive)
-        }
+        Ok(Self { archive })
     }
+}
 
-    impl<R: Read> Bzip2<R> {
-        pub fn new(r: R) -> std::io::Result<Self> {
-            let archive = BzDecoder::new(r);
+impl<R: Read> Compressed for Bzip2<R> {}
 
-            Ok(Self { archive })
-        }
-    }
-
-    impl<R: Read> Compressed for Bzip2<R> {
-        fn decompress(&mut self, target: &Path) -> Result<()> {
-            if let Some(p) = target.parent() {
-                if !p.exists() {
-                    create_dir_all(&p)?;
-                }
-            }
-
-            let mut output = File::create(target)?;
-            copy(&mut self.archive, &mut output)?;
-
-            Ok(())
-        }
-    }
-
-    impl<R: Read> Read for Bzip2<R> {
-        fn read(&mut self, into: &mut [u8]) -> std::io::Result<usize> {
-            self.archive.read(into)
-        }
+impl<R: Read> Read for Bzip2<R> {
+    fn read(&mut self, into: &mut [u8]) -> std::io::Result<usize> {
+        self.archive.read(into)
     }
 }
