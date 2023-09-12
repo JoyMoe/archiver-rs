@@ -62,9 +62,9 @@ pub fn open(path: &Path) -> std::io::Result<Box<dyn Archive>> {
     use std::fs::File;
     use std::io::{Error, ErrorKind, Read, Seek, SeekFrom};
 
-    let mut file = File::open(&path)?;
+    let mut file = File::open(path)?;
     let mut buffer = [0u8; 2];
-    file.read(&mut buffer)?;
+    file.read_exact(&mut buffer)?;
     file.seek(SeekFrom::Start(0))?;
 
     match buffer {
