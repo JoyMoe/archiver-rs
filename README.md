@@ -5,6 +5,7 @@
 [![Crates.io](https://img.shields.io/crates/d/archiver-rs)](http://crates.io/crates/archiver-rs)
 [![Crates.io](https://img.shields.io/crates/l/archiver-rs)](https://github.com/JoyMoe/archiver-rs/blob/master/LICENSE)
 [![Build](../../actions/workflows/rust.yml/badge.svg)](../../actions/workflows/rust.yml)
+[![Clippy](../../actions/workflows/clippy.yml/badge.svg)](../../actions/workflows/clippy.yml)
 
 A library for easy interaction with multiple archive formats
 
