@@ -32,3 +32,6 @@ bzip = ["bzip2", "zip/bzip2"]
 gzip = ["flate2"]
 xz = ["xz2"]
 zip-all = ["zip", "zip/bzip2"]
+
+[dev-dependencies]
+tempfile = "3.8.0"
