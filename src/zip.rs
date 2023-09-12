@@ -11,7 +11,7 @@ pub struct Zip<R: Read + Seek> {
 }
 
 impl Zip<File> {
-    pub fn open(path: &Path) -> std::io::Result<Self> {
+    pub fn open(path: impl AsRef<Path>) -> std::io::Result<Self> {
         let archive = File::open(path)?;
 
         Self::new(archive)

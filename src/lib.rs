@@ -73,7 +73,7 @@ pub trait Compressed: std::io::Read {
     }
 }
 
-pub fn open(path: &Path) -> std::io::Result<Box<dyn Archive>> {
+pub fn open(path: impl AsRef<Path>) -> std::io::Result<Box<dyn Archive>> {
     use std::io::{Error, ErrorKind, Read, Seek, SeekFrom};
 
     let mut file = File::open(path)?;

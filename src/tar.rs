@@ -9,7 +9,7 @@ pub struct Tar<R: Read> {
 }
 
 impl Tar<File> {
-    pub fn open(path: &Path) -> std::io::Result<Self> {
+    pub fn open(path: impl AsRef<Path>) -> std::io::Result<Self> {
         let archive = File::open(path)?;
 
         Self::new(archive)

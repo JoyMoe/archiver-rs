@@ -14,7 +14,7 @@ fn test_decompress(mut compressed: impl Compressed, expected: &str) -> Result<()
 }
 
 #[test]
-fn test_gzipped_decompress() -> Result<()> {
+fn test_gzipped_decompress_path() -> Result<()> {
     test_decompress(
         Gzip::open(Path::new("tests/sample/sample.txt.gz"))?,
         "sample\n",
@@ -22,7 +22,12 @@ fn test_gzipped_decompress() -> Result<()> {
 }
 
 #[test]
-fn test_bzipped_decompress() -> Result<()> {
+fn test_gzipped_decompress_str() -> Result<()> {
+    test_decompress(Gzip::open("tests/sample/sample.txt.gz")?, "sample\n")
+}
+
+#[test]
+fn test_bzipped_decompress_path() -> Result<()> {
     test_decompress(
         Bzip2::open(Path::new("tests/sample/sample.txt.bz2"))?,
         "sample\n",
@@ -30,9 +35,19 @@ fn test_bzipped_decompress() -> Result<()> {
 }
 
 #[test]
-fn test_xzipped_decompress() -> Result<()> {
+fn test_bzipped_decompress_str() -> Result<()> {
+    test_decompress(Bzip2::open("tests/sample/sample.txt.bz2")?, "sample\n")
+}
+
+#[test]
+fn test_xzipped_decompress_path() -> Result<()> {
     test_decompress(
         Xz::open(Path::new("tests/sample/sample.txt.xz"))?,
         "sample\n",
     )
+}
+
+#[test]
+fn test_xzipped_decompress_str() -> Result<()> {
+    test_decompress(Xz::open("tests/sample/sample.txt.xz")?, "sample\n")
 }
