@@ -1,10 +1,7 @@
-use std::fs::{create_dir_all, File};
-use std::io::{copy, Read};
-use std::path::Path;
-
 use bzip2::read::BzDecoder;
+use std::{fs::File, io::Read, path::Path};
 
-use crate::{Compressed, Result};
+use crate::Compressed;
 
 pub struct Bzip2<R: Read> {
     archive: BzDecoder<R>,
@@ -26,20 +23,7 @@ impl<R: Read> Bzip2<R> {
     }
 }
 
-impl<R: Read> Compressed for Bzip2<R> {
-    fn decompress(&mut self, target: &Path) -> Result<()> {
-        if let Some(p) = target.parent() {
-            if !p.exists() {
-                create_dir_all(p)?;
-            }
-        }
-
-        let mut output = File::create(target)?;
-        copy(&mut self.archive, &mut output)?;
-
-        Ok(())
-    }
-}
+impl<R: Read> Compressed for Bzip2<R> {}
 
 impl<R: Read> Read for Bzip2<R> {
     fn read(&mut self, into: &mut [u8]) -> std::io::Result<usize> {

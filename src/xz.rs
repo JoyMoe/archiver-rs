@@ -1,10 +1,7 @@
-use std::fs::{create_dir_all, File};
-use std::io::{copy, Read};
-use std::path::Path;
-
+use std::{fs::File, io::Read, path::Path};
 use xz2::read::XzDecoder;
 
-use crate::{Compressed, Result};
+use crate::Compressed;
 
 pub struct Xz<R: Read> {
     archive: XzDecoder<R>,
@@ -26,20 +23,7 @@ impl<R: Read> Xz<R> {
     }
 }
 
-impl<R: Read> Compressed for Xz<R> {
-    fn decompress(&mut self, target: &Path) -> Result<()> {
-        if let Some(p) = target.parent() {
-            if !p.exists() {
-                create_dir_all(p)?;
-            }
-        }
-
-        let mut output = File::create(target)?;
-        copy(&mut self.archive, &mut output)?;
-
-        Ok(())
-    }
-}
+impl<R: Read> Compressed for Xz<R> {}
 
 impl<R: Read> Read for Xz<R> {
     fn read(&mut self, into: &mut [u8]) -> std::io::Result<usize> {

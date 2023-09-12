@@ -1,4 +1,8 @@
-use std::path::Path;
+use std::{
+    fs::{create_dir_all, File},
+    io,
+    path::Path,
+};
 
 use thiserror::Error;
 
@@ -55,11 +59,21 @@ pub trait Archive {
 }
 
 pub trait Compressed: std::io::Read {
-    fn decompress(&mut self, target: &Path) -> Result<()>;
+    fn decompress(&mut self, target: &Path) -> Result<()> {
+        if let Some(p) = target.parent() {
+            if !p.exists() {
+                create_dir_all(p)?;
+            }
+        }
+
+        let mut output = File::create(target)?;
+        io::copy(self, &mut output)?;
+
+        Ok(())
+    }
 }
 
 pub fn open(path: &Path) -> std::io::Result<Box<dyn Archive>> {
-    use std::fs::File;
     use std::io::{Error, ErrorKind, Read, Seek, SeekFrom};
 
     let mut file = File::open(path)?;
